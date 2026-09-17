@@ -1,25 +1,26 @@
-# BRON — cPanel Git Version Control (shahjaha account)
+# BRON — Spaceship cPanel Git Version Control
 
-Use this guide for **https://bron.serinstech.com**, without remote SSH login. It supersedes the File Manager/SSH deployment routes for this account.
+Use this guide for **https://bronhighworks.com** on the Spaceship cPanel account `aneowclfol`, without remote SSH login. It supersedes the earlier Serinstech instructions.
 
 ## Directory layout
 
 | Purpose | Exact path |
 | --- | --- |
-| Existing domain document root, public files only | `/home2/shahjaha/public_html/bron.serinstech.com/public` |
-| Private Laravel application, dependencies, `.env` and storage | `/home2/shahjaha/bron` |
-| cPanel Git repository (choose this on creation) | `/home2/shahjaha/repositories/bron-highworks` |
-| PHP executable configuration (one line, outside Git) | `/home2/shahjaha/.bron-php-path` |
-| Optional one-time initial admin credentials | `/home2/shahjaha/bron-admin.json` |
-| Private deployment backups | `/home2/shahjaha/bron-backups` |
+| Domain document root, public files only | `/home/aneowclfol/public_html` |
+| Private Laravel application, dependencies, `.env` and storage | `/home/aneowclfol/bron` |
+| cPanel Git repository (choose this on creation) | `/home/aneowclfol/repositories/bron-highworks` |
+| Optional web-root override (one line, outside Git) | `/home/aneowclfol/.bron-web-root` |
+| Optional PHP executable override (one line, outside Git) | `/home/aneowclfol/.bron-php-path` |
+| Optional one-time initial admin credentials | `/home/aneowclfol/bron-admin.json` |
+| Private deployment backups | `/home/aneowclfol/bron-backups` |
 
 The public `index.php` loads Laravel from the private app directory. Keep the current domain document root; do not put `.env`, `vendor`, the Git checkout, or the complete Laravel app under `public_html`. The path contains the literal `public_html`, with **no backslash** before `_`.
 
-## Temporary subdomain document root
+## Spaceship document root
 
-In **cPanel → Domains → Manage → bron.serinstech.com**, confirm the document root is exactly `/home2/shahjaha/public_html/bron.serinstech.com/public`. This is the confirmed temporary-subdomain configuration. The browser URL stays `https://bron.serinstech.com` — do not add `/public` to the URL or `APP_URL`.
+The Spaceship hosting account serves `bronhighworks.com` from `/home/aneowclfol/public_html`. The browser URL is `https://bronhighworks.com` — do not add `/public` to the URL or `APP_URL`.
 
-The deployment script now targets that final `public` directory. After deploying, check that `index.php`, `.htaccess`, `operations.css` and `brand/` are directly inside it, not in another nested `public` folder. Keep the private application at `/home2/shahjaha/bron` and the Git checkout at `/home2/shahjaha/repositories/bron-highworks`.
+Create `/home/aneowclfol/.bron-web-root` in File Manager with exactly `/home/aneowclfol/public_html` on its first line. After deploying, check that `index.php`, `.htaccess`, `operations.css` and `brand/` are directly inside `public_html`, not in another nested `public` folder. Keep the private application and Git checkout at the paths shown above.
 
 If you previously deployed using the old parent-directory destination, back up and review those old public files separately. The corrected deployment only synchronizes the new `/public` destination; it does not remove files from its parent. Do not move or delete the new `public` directory during cleanup.
 
@@ -57,27 +58,27 @@ Open **cPanel → Files → Git™ Version Control → Create**:
 
 - **Clone a Repository:** enabled.
 - **Clone URL:** `https://github.com/nazrinaza/bron-highworks-website.git` (public HTTPS; no credentials required).
-- **Repository Path:** `/home2/shahjaha/repositories/bron-highworks`.
+- **Repository Path:** `/home/aneowclfol/repositories/bron-highworks`.
 - **Repository Name:** `BRON Highworks`.
 
 Create the repository. Open **Manage** and select **`cpanel`** as the checked-out branch. If it is not listed, wait for the GitHub Actions build to finish and refresh/update the remote branches. The default `main` branch is source-only and intentionally refuses deployment.
 
-Do not create the Git repository in `/home2/shahjaha/public_html/bron.serinstech.com/public`. If you already have a checkout there, back it up and ask support to relocate the repository before proceeding. Do not delete unrelated site files blindly.
+Do not create the Git repository in `/home/aneowclfol/public_html`. If you already have a checkout there, back it up and ask support to relocate the repository before proceeding. Do not delete unrelated site files blindly.
 
 ## 3. Configure PHP, database, HTTPS and environment
 
-1. Set the subdomain to PHP 8.3 in cPanel. Enable PDO MySQL and Laravel's required extensions.
-2. Confirm the domain points at this hosting account and enable its HTTPS certificate. Its document root stays `/home2/shahjaha/public_html/bron.serinstech.com/public`.
-3. Ask support for the **absolute PHP 8.3 CLI executable**. A common cPanel path is `/usr/local/bin/ea-php83`, but it must be verified on your server.
-4. In File Manager, enable **Show Hidden Files**. Create `/home2/shahjaha/.bron-php-path`. Put **only the confirmed executable path** on the first line, with no quotes, command arguments, or variable assignment. Save it.
+1. Set `bronhighworks.com` to PHP 8.3 in **PHP Tweaks**. Enable PDO MySQL and Laravel's required extensions.
+2. Confirm the domain points at Spaceship hosting and that HTTPS is active. Its document root stays `/home/aneowclfol/public_html`.
+3. The deployment automatically finds a compatible PHP 8.3+ CLI. If it reports that none is available, ask Spaceship support for the absolute PHP 8.3 CLI executable, then create `/home/aneowclfol/.bron-php-path` containing only that path.
+4. In File Manager, enable **Show Hidden Files**. Create `/home/aneowclfol/.bron-web-root` containing only `/home/aneowclfol/public_html`.
 5. Create a dedicated MySQL/MariaDB database and user through cPanel. Grant that user privileges on the BRON database only. Record the complete cPanel-prefixed names. Do not reuse the CuciNow database.
-6. Create the private folder `/home2/shahjaha/bron` and inside it a file named `.env`:
+6. Create the private folder `/home/aneowclfol/bron` and inside it a file named `.env`:
 
 ```dotenv
 APP_NAME="BRON Highworks"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://bron.serinstech.com
+APP_URL=https://bronhighworks.com
 APP_KEY=
 DB_CONNECTION=mysql
 DB_HOST=localhost
@@ -104,7 +105,7 @@ Use the host-confirmed database hostname if it is not `localhost`. Preserve vali
 
 ## 4. Create the initial administrator without Terminal
 
-For a **new installation with no admin yet**, use File Manager to create `/home2/shahjaha/bron-admin.json`, outside `public_html` and outside the Git checkout:
+For a **new installation with no admin yet**, use File Manager to create `/home/aneowclfol/bron-admin.json`, outside `public_html` and outside the Git checkout:
 
 ```json
 {
@@ -135,16 +136,16 @@ If your hosting cannot execute these tasks, ask support to enable cPanel Git dep
 
 Open:
 
-- `https://bron.serinstech.com/up`
-- `https://bron.serinstech.com/site-assessment`
-- `https://bron.serinstech.com/admin/login`
+- `https://bronhighworks.com/up`
+- `https://bronhighworks.com/site-assessment`
+- `https://bronhighworks.com/admin/login`
 
 Submit a test assessment, sign in with the admin credentials, and verify visits/documents. Check HTTPS and that private files are inaccessible. Confirm `bron-admin.json` was removed. Back up the database, `.env` including `APP_KEY`, and private uploaded files.
 
 In **Cron Jobs**, select every minute and use the actual confirmed PHP executable:
 
 ```cron
-* * * * * /CONFIRMED/PHP83/PATH /home2/shahjaha/bron/artisan schedule:run >> /home2/shahjaha/bron/storage/logs/scheduler.log 2>&1
+* * * * * /CONFIRMED/PHP83/PATH /home/aneowclfol/bron/artisan schedule:run >> /home/aneowclfol/bron/storage/logs/scheduler.log 2>&1
 ```
 
 If cPanel has separate time fields, paste only the command after the five stars into its Command field. This scheduler is future-ready; no business schedules are configured yet. Resend and payments are not yet integrated; outbound HTTPS alone does not enable them.
@@ -161,7 +162,7 @@ If Git reports a dirty checkout, do not edit deployment branch files locally. Pu
 
 ## Copy this request to hosting support if needed
 
-> Please enable cPanel Git pull deployment for account shahjaha, repository nazrinaza/bron-highworks-website, using the public HTTPS clone URL https://github.com/nazrinaza/bron-highworks-website.git (no deploy key required). I do not have remote SSH access. The checkout will be /home2/shahjaha/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, tar, sha256sum and standard file utilities for .cpanel.yml tasks. The private Laravel app will be /home2/shahjaha/bron; public files will remain at /home2/shahjaha/public_html/bron.serinstech.com/public. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
+> Please enable cPanel Git pull deployment for Spaceship account aneowclfol, repository nazrinaza/bron-highworks-website, using the public HTTPS clone URL https://github.com/nazrinaza/bron-highworks-website.git. I do not have remote SSH access. The checkout will be /home/aneowclfol/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, tar, sha256sum and standard file utilities for .cpanel.yml tasks. The private Laravel app will be /home/aneowclfol/bron; public files will be /home/aneowclfol/public_html. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
 
 Official references:
 
@@ -174,15 +175,15 @@ The current deployment uses PHP's filesystem functions to synchronize applicatio
 
 If your log still says `required hosting command "rsync" is unavailable`, you are running the older script. Wait for the latest GitHub Actions build and publish-cpanel jobs to succeed, select branch `cpanel`, click **Update from Remote**, then **Deploy HEAD Commit**.
 
-The new log begins with `BRON deployment started (portable PHP copy v3).` Read the newest `/home2/shahjaha/.cpanel/logs/vc_..._git_deploy.log` for progress and errors. If that marker is absent, check the checked-out commit and the hosting task runner before retrying.
+The new log begins with `BRON deployment started (portable cPanel deployment v4).` Read the newest `/home/aneowclfol/.cpanel/logs/vc_..._git_deploy.log` for progress and errors. If that marker is absent, check the checked-out commit and the hosting task runner before retrying.
 
-Normal exits remove `/home2/shahjaha/.bron-deploy-lock` and the temporary staging directory. If the hosting provider forcibly kills a deployment, a stale lock directory may remain. Only after confirming that no deployment is running, remove that **empty lock directory** in File Manager and retry. Do not remove an active deployment lock. A permissions error while creating the lock also needs to be resolved rather than bypassed.
+Normal exits remove `/home/aneowclfol/.bron-deploy-lock` and the temporary staging directory. If the hosting provider forcibly kills a deployment, a stale lock directory may remain. Only after confirming that no deployment is running, remove that **empty lock directory** in File Manager and retry. Do not remove an active deployment lock. A permissions error while creating the lock also needs to be resolved rather than bypassed.
 
 ## Files and migrations succeeded, but admin provisioning failed
 
 The application/database are already installed; do not delete the database, rerun initial setup from scratch, or regenerate `APP_KEY`.
 
-1. In File Manager, privately edit `/home2/shahjaha/bron-admin.json`. It must be a JSON object containing `name`, `email` and `password`, using double quotes with no trailing comma.
+1. In File Manager, privately edit `/home/aneowclfol/bron-admin.json`. It must be a JSON object containing `name`, `email` and `password`, using double quotes with no trailing comma.
 2. `name` must be non-empty text; `email` must be a real valid email address; `password` must be text with at least 12 characters including letters and numbers. Do not leave the example placeholders unchanged.
 3. Save it with permissions `600`, owned by the cPanel account. Do not send this file or password in chat.
 4. On branch `cpanel`, click **Update from Remote**, then **Deploy HEAD Commit**. Existing migrations are preserved; the deployment retries admin creation and finishes the caches/maintenance steps.

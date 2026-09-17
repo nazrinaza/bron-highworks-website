@@ -6,17 +6,37 @@ exec 1>&2
 # cPanel task runners may provide a smaller PATH than an interactive shell.
 export PATH="${PATH:-/usr/bin:/bin}:/usr/local/bin:/usr/bin:/bin"
 trap 'code=$?; printf "BRON ERROR: deployment stopped at script line %s (exit %s). See the preceding message.\n" "$LINENO" "$code" >&2; exit "$code"' ERR
-printf 'BRON deployment started (portable PHP copy v3).\n' >&2
+printf 'BRON deployment started (portable cPanel deployment v4).\n' >&2
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-account_dir=/home2/shahjaha
+account_dir=${BRON_ACCOUNT_DIR:-${HOME:-}}
+[[ -n "$account_dir" && "$account_dir" = /* && -d "$account_dir" ]] || { echo 'Unable to detect the cPanel account home directory.'; exit 1; }
 app_dir=$account_dir/bron
-web_dir=$account_dir/public_html/bron.serinstech.com/public
+if [[ -f "$account_dir/.bron-web-root" ]]; then
+    IFS= read -r web_dir < "$account_dir/.bron-web-root" || true
+    web_dir=${web_dir%$'\r'}
+elif [[ -d "$account_dir/public_html/bron.serinstech.com/public" ]]; then
+    # Preserve the established temporary-domain layout during the migration.
+    web_dir=$account_dir/public_html/bron.serinstech.com/public
+else
+    web_dir=$account_dir/public_html
+fi
+[[ "$web_dir" = "$account_dir"/* ]] || { echo 'Invalid web root: it must be an absolute path inside the cPanel account home.'; exit 1; }
 [[ -f "$repo_dir/bron-cpanel.tar.gz" ]] || { echo 'Select the cpanel branch, not main. It contains the GitHub-built application.'; exit 1; }
-[[ -f "$account_dir/.bron-php-path" ]] || { echo 'Create /home2/shahjaha/.bron-php-path containing the provider-confirmed PHP 8.3 executable path.'; exit 1; }
-IFS= read -r php_bin < "$account_dir/.bron-php-path" || true
-php_bin=${php_bin%$'\r'}
-[[ "$php_bin" = /* && -x "$php_bin" ]] || { echo 'Invalid PHP CLI path.'; exit 1; }
-[[ -f "$app_dir/.env" ]] || { echo 'Create /home2/shahjaha/bron/.env first. Follow CPANEL-GIT.md.'; exit 1; }
+php_bin=''
+if [[ -f "$account_dir/.bron-php-path" ]]; then
+    IFS= read -r php_bin < "$account_dir/.bron-php-path" || true
+    php_bin=${php_bin%$'\r'}
+    [[ "$php_bin" = /* && -x "$php_bin" ]] || { echo 'Invalid PHP CLI path in .bron-php-path.'; exit 1; }
+else
+    for php_candidate in "$(command -v php 2>/dev/null || true)" /opt/cpanel/ea-php83/root/usr/bin/php /opt/alt/php83/usr/bin/php /usr/local/bin/php /usr/bin/php; do
+        if [[ -n "$php_candidate" && -x "$php_candidate" ]] && "$php_candidate" -r 'exit(PHP_VERSION_ID >= 80300 ? 0 : 1);' >/dev/null 2>&1; then
+            php_bin=$php_candidate
+            break
+        fi
+    done
+fi
+[[ -n "$php_bin" ]] || { echo 'No compatible PHP 8.3+ CLI was found. Create .bron-php-path in the cPanel home with the provider-confirmed executable path.'; exit 1; }
+[[ -f "$app_dir/.env" ]] || { printf 'Create %s/.env first. Follow CPANEL-GIT.md.\n' "$app_dir"; exit 1; }
 [[ ! -L "$app_dir" && ! -L "$web_dir" ]] || { echo 'Deployment directories must not be symlinks.'; exit 1; }
 printf 'BRON: checking hosting deployment tools.\n' >&2
 for required_tool in sha256sum tar mktemp mkdir cp chmod date rm rmdir; do
@@ -94,4 +114,4 @@ fi
 cp "$staging/bron/public/.htaccess" "$web_dir/.htaccess"
 chmod 644 "$web_dir/.htaccess"
 trap - ERR
-echo 'BRON deployed. Test https://bron.serinstech.com/site-assessment and /admin/login. Database backups are managed separately.'
+echo 'BRON deployed. Test https://bronhighworks.com/site-assessment and /admin/login. Database backups are managed separately.'
