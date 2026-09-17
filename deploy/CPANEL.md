@@ -1,5 +1,7 @@
 # BRON: GitHub Actions and cPanel deployment
 
+**For the current shahjaha hosting account, use [CPANEL-GIT.md](CPANEL-GIT.md).** The live workflow now publishes the `cpanel` branch for cPanel Git pull deployment; the older optional SSH dispatch described below is superseded. The File Manager steps remain a manual alternative.
+
 This repository supports PHP 8.3, Apache and MariaDB 11.4. The workflow tests with SQLite and MariaDB, installs production Composer dependencies, and creates a ready-to-upload package. Current frontend assets are plain CSS/JavaScript already in `backend/public`; no Node build is needed. No credentials are included in the package.
 
 Normal pushes to `main` **build only**. They do not change your live server. Choose File Manager installation without SSH, or enable the optional SSH update job after the first installation. Your existing Sites website remains separate until you point your domain at cPanel.

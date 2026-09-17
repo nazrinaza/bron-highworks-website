@@ -5,11 +5,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      deploy:
-        description: Deploy to configured cPanel server over SSH (initial installation required)
-        type: boolean
-        default: false
 permissions:
   contents: read
 concurrency:
@@ -67,6 +62,8 @@ jobs:
           composer check-platform-reqs --no-dev
       - name: Build cPanel archives
         run: python3 deploy/package.py
+      - name: Verify production package and initial admin provisioning
+        run: python3 deploy/test_release.py
       - name: Store installation package and checksum
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -80,35 +77,46 @@ jobs:
           if-no-files-found: error
       - name: Explain next step
         run: |
-          echo 'Download the artifact, then follow deploy/CPANEL.md. No server changes occur on a normal push.' >> "$GITHUB_STEP_SUMMARY"
-  deploy:
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
+          echo 'Download the artifact, then follow deploy/CPANEL.md. The cpanel branch is published after tests. No server changes occur until cPanel deploys it.' >> "$GITHUB_STEP_SUMMARY"
+  publish-cpanel:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     permissions:
-      contents: read
+      contents: write
       actions: read
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    environment: production
-    concurrency:
-      group: bron-production
-      cancel-in-progress: false
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - name: Download this run's tested package
+      - name: Publish tested package to cPanel branch
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh run download "$GITHUB_RUN_ID" --name "bron-cpanel-$GITHUB_SHA" --dir artifact
-      - name: Deploy existing cPanel installation
-        env:
-          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
-          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
-          CPANEL_USER: ${{ secrets.CPANEL_USER }}
-          CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
-          CPANEL_KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
-          CPANEL_APP_DIR: ${{ vars.CPANEL_APP_DIR }}
-          CPANEL_PHP: ${{ vars.CPANEL_PHP }}
-          BRON_URL: ${{ vars.BRON_URL }}
-        run: python3 deploy/ssh_deploy.py
+        run: |
+          gh run download "$GITHUB_RUN_ID" --name "bron-cpanel-$GITHUB_SHA" --dir artifact
+          gh auth setup-git
+          mkdir release
+          cd release
+          git init
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          if git ls-remote --heads origin cpanel | grep -q refs/heads/cpanel; then
+            git fetch --depth=1 origin cpanel
+            git checkout -b cpanel FETCH_HEAD
+            git rm -rf .
+          else
+            git checkout --orphan cpanel
+          fi
+          cp ../artifact/build/bron-cpanel.tar.gz .
+          cp ../artifact/build/SHA256SUMS .
+          cp ../.cpanel.yml .
+          mkdir -p deploy
+          cp ../deploy/cpanel-pull.sh ../deploy/public-index.php ../deploy/first-admin.php deploy/
+          cp ../deploy/CPANEL-GIT.md .
+          printf '%s\n' "$GITHUB_SHA" > SOURCE_COMMIT
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "Build cPanel deployment from $GITHUB_SHA"
+          git push origin HEAD:cpanel
+          echo 'cPanel branch updated. In cPanel: Update from Remote, then Deploy HEAD Commit. See deploy/CPANEL-GIT.md.' >> "$GITHUB_STEP_SUMMARY"
