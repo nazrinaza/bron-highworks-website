@@ -167,3 +167,15 @@ Official references:
 
 - https://docs.cpanel.net/knowledge-base/web-services/guide-to-git-deployment/
 - https://docs.cpanel.net/cpanel/files/git-version-control/
+
+## Deployment exits immediately with code 1 and no files appear
+
+The deployment script now prints `BRON deployment started (diagnostics v2).` immediately and reports missing hosting tools by name. Early errors occur before files are copied to the public directory.
+
+1. Wait for the latest GitHub Actions run to finish both build and publish-cpanel jobs.
+2. In cPanel confirm branch `cpanel`, click **Update from Remote**, then **Deploy HEAD Commit**.
+3. In File Manager enable **Show Hidden Files** and open `/home2/shahjaha/.cpanel/logs`.
+4. Open the newest `vc_..._git_deploy.log` and look for the `BRON` messages. If the new startup marker is absent, the updated script has not run or the hosting task runner is failing before it starts. Check the checked-out commit and `/home2/shahjaha/.cpanel/logs/user_task_runner.log` with support.
+5. If the error names `rsync`, `flock`, or another command, ask support to enable that command for the account's Git deployment environment. A command available elsewhere on the host may still be unavailable in a jailed deployment task.
+
+The prior script silently exited if `rsync` or `flock` was unavailable. That is a possible cause of a log containing only `Task completed with exit code 1`, but the new diagnostic message is needed to confirm the actual cause. Do not remove locking or copy the full Laravel app into the public directory to work around this.
