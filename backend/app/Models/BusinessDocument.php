@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BusinessDocument extends Model
 {
@@ -22,7 +23,7 @@ class BusinessDocument extends Model
             'quotation' => ['draft', 'issued', 'accepted', 'declined', 'cancelled'],
             'customer_po' => ['draft', 'received', 'confirmed', 'fulfilled', 'cancelled'],
             'supplier_po' => ['draft', 'issued', 'received', 'cancelled'],
-            'invoice' => ['draft', 'issued', 'paid', 'cancelled'],
+            'invoice' => ['draft', 'issued', 'partially_paid', 'paid', 'cancelled'],
             'delivery_order' => ['draft', 'issued', 'delivered', 'cancelled'], default => ['draft']
         };
     }
@@ -30,6 +31,21 @@ class BusinessDocument extends Model
     protected function casts(): array
     {
         return ['revision' => 'integer', 'items' => 'array', 'issued_on' => 'date', 'due_on' => 'date'];
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->orderBy('paid_on')->orderBy('id');
+    }
+
+    public function recordedPaidCents(): int
+    {
+        return (int) $this->payments->sum('amount_cents');
+    }
+
+    public function balanceCents(): int
+    {
+        return max(0, (int) $this->total_cents - $this->recordedPaidCents());
     }
 
     public function visit(): BelongsTo

@@ -103,7 +103,7 @@ class DocumentController extends Controller
 
     public function show(BusinessDocument $document): View
     {
-        $document->load(['visit', 'parent']);
+        $document->load(['visit', 'parent', 'payments.recorder']);
 
         return view('admin.document', compact('document'));
     }
@@ -116,9 +116,12 @@ class DocumentController extends Controller
             if ($locked->revision !== (int) $data['revision']) {
                 throw ValidationException::withMessages(['revision' => 'This document changed. Reload before updating.']);
             }
+            if ($locked->type === 'invoice' && in_array($data['status'], ['paid', 'partially_paid'], true)) {
+                throw ValidationException::withMessages(['status' => 'Use Record payment below to update the payment status.']);
+            }
             $allowed = match ($locked->status) {
                 'draft' => [$locked->type === 'customer_po' ? 'received' : 'issued', 'cancelled'],'issued' => match ($locked->type) {
-                    'quotation' => ['accepted', 'declined', 'cancelled'],'invoice' => ['paid', 'cancelled'],'delivery_order' => ['delivered', 'cancelled'],'supplier_po' => ['received', 'cancelled'],default => []
+                    'quotation' => ['accepted', 'declined', 'cancelled'],'invoice' => ['cancelled'],'delivery_order' => ['delivered', 'cancelled'],'supplier_po' => ['received', 'cancelled'],default => []
                 },'received' => $locked->type === 'customer_po' ? ['confirmed', 'cancelled'] : [],'confirmed' => ['fulfilled', 'cancelled'],default => []
             };
             if (! in_array($data['status'], $allowed, true)) {
