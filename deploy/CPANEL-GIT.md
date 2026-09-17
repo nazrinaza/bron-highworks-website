@@ -6,7 +6,7 @@ Use this guide for **https://bron.serinstech.com**, without remote SSH login. It
 
 | Purpose | Exact path |
 | --- | --- |
-| Existing domain document root, public files only | `/home2/shahjaha/public_html/bron.serinstech.com` |
+| Existing domain document root, public files only | `/home2/shahjaha/public_html/bron.serinstech.com/public` |
 | Private Laravel application, dependencies, `.env` and storage | `/home2/shahjaha/bron` |
 | cPanel Git repository (choose this on creation) | `/home2/shahjaha/repositories/bron-highworks` |
 | PHP executable configuration (one line, outside Git) | `/home2/shahjaha/.bron-php-path` |
@@ -14,6 +14,14 @@ Use this guide for **https://bron.serinstech.com**, without remote SSH login. It
 | Private deployment backups | `/home2/shahjaha/bron-backups` |
 
 The public `index.php` loads Laravel from the private app directory. Keep the current domain document root; do not put `.env`, `vendor`, the Git checkout, or the complete Laravel app under `public_html`. The path contains the literal `public_html`, with **no backslash** before `_`.
+
+## Temporary subdomain document root
+
+In **cPanel → Domains → Manage → bron.serinstech.com**, confirm the document root is exactly `/home2/shahjaha/public_html/bron.serinstech.com/public`. This is the confirmed temporary-subdomain configuration. The browser URL stays `https://bron.serinstech.com` — do not add `/public` to the URL or `APP_URL`.
+
+The deployment script now targets that final `public` directory. After deploying, check that `index.php`, `.htaccess`, `operations.css` and `brand/` are directly inside it, not in another nested `public` folder. Keep the private application at `/home2/shahjaha/bron` and the Git checkout at `/home2/shahjaha/repositories/bron-highworks`.
+
+If you previously deployed using the old parent-directory destination, back up and review those old public files separately. The corrected deployment only synchronizes the new `/public` destination; it does not remove files from its parent. Do not move or delete the new `public` directory during cleanup.
 
 ## How updates flow
 
@@ -48,12 +56,12 @@ Open **cPanel → Files → Git™ Version Control → Create**:
 
 Create the repository. Open **Manage** and select **`cpanel`** as the checked-out branch. If it is not listed, wait for the GitHub Actions build to finish and refresh/update the remote branches. The default `main` branch is source-only and intentionally refuses deployment.
 
-Do not create the Git repository in `/home2/shahjaha/public_html/bron.serinstech.com`. If you already have a checkout there, back it up and ask support to relocate the repository before proceeding. Do not delete unrelated site files blindly.
+Do not create the Git repository in `/home2/shahjaha/public_html/bron.serinstech.com/public`. If you already have a checkout there, back it up and ask support to relocate the repository before proceeding. Do not delete unrelated site files blindly.
 
 ## 3. Configure PHP, database, HTTPS and environment
 
 1. Set the subdomain to PHP 8.3 in cPanel. Enable PDO MySQL and Laravel's required extensions.
-2. Confirm the domain points at this hosting account and enable its HTTPS certificate. Its document root stays `/home2/shahjaha/public_html/bron.serinstech.com`.
+2. Confirm the domain points at this hosting account and enable its HTTPS certificate. Its document root stays `/home2/shahjaha/public_html/bron.serinstech.com/public`.
 3. Ask support for the **absolute PHP 8.3 CLI executable**. A common cPanel path is `/usr/local/bin/ea-php83`, but it must be verified on your server.
 4. In File Manager, enable **Show Hidden Files**. Create `/home2/shahjaha/.bron-php-path`. Put **only the confirmed executable path** on the first line, with no quotes, command arguments, or variable assignment. Save it.
 5. Create a dedicated MySQL/MariaDB database and user through cPanel. Grant that user privileges on the BRON database only. Record the complete cPanel-prefixed names. Do not reuse the CuciNow database.
@@ -147,7 +155,7 @@ If Git reports a dirty checkout, do not edit deployment branch files locally. Pu
 
 ## Copy this request to hosting support if needed
 
-> Please enable cPanel Git pull deployment for account shahjaha, repository nazrinaza/bron-highworks-website, using a read-only GitHub deploy key. I do not have remote SSH access. The checkout will be /home2/shahjaha/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, rsync, flock, tar and sha256sum for .cpanel.yml tasks. The private Laravel app will be /home2/shahjaha/bron; public files will remain at /home2/shahjaha/public_html/bron.serinstech.com. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
+> Please enable cPanel Git pull deployment for account shahjaha, repository nazrinaza/bron-highworks-website, using a read-only GitHub deploy key. I do not have remote SSH access. The checkout will be /home2/shahjaha/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, rsync, flock, tar and sha256sum for .cpanel.yml tasks. The private Laravel app will be /home2/shahjaha/bron; public files will remain at /home2/shahjaha/public_html/bron.serinstech.com/public. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
 
 Official references:
 

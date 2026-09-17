@@ -4,7 +4,7 @@ umask 077
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 account_dir=/home2/shahjaha
 app_dir=$account_dir/bron
-web_dir=$account_dir/public_html/bron.serinstech.com
+web_dir=$account_dir/public_html/bron.serinstech.com/public
 [[ -f "$repo_dir/bron-cpanel.tar.gz" ]] || { echo 'Select the cpanel branch, not main. It contains the GitHub-built application.'; exit 1; }
 [[ -f "$account_dir/.bron-php-path" ]] || { echo 'Create /home2/shahjaha/.bron-php-path containing the provider-confirmed PHP 8.3 executable path.'; exit 1; }
 IFS= read -r php_bin < "$account_dir/.bron-php-path" || true
