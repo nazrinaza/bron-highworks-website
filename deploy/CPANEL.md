@@ -1,12 +1,12 @@
 # BRON: GitHub Actions and cPanel deployment
 
-**For the current shahjaha hosting account, use [CPANEL-GIT.md](CPANEL-GIT.md).** The live workflow now publishes the `cpanel` branch for cPanel Git pull deployment; the older optional SSH dispatch described below is superseded. The File Manager steps remain a manual alternative.
+**For the current Spaceship hosting account, use [CPANEL-GIT.md](CPANEL-GIT.md).** The live workflow publishes the `cpanel` branch for cPanel Git pull deployment; the older optional SSH dispatch described below is superseded. The File Manager steps remain a manual alternative.
 
 This repository supports PHP 8.3, Apache and MariaDB 11.4. The workflow tests with SQLite and MariaDB, installs production Composer dependencies, and creates a ready-to-upload package. Current frontend assets are plain CSS/JavaScript already in `backend/public`; no Node build is needed. No credentials are included in the package.
 
 Normal pushes to `main` **build only**. They do not change your live server. Choose File Manager installation without SSH, or enable the optional SSH update job after the first installation. Your existing Sites website remains separate until you point your domain at cPanel.
 
-Current target: **https://bron.serinstech.com**. SSH is unavailable, so follow steps 1–8 using File Manager and cPanel browser Terminal if enabled (otherwise hosting support). Skip the optional SSH section unless your hosting access changes. GitHub automatically builds the upload package; the no-SSH path does not automatically transfer it to cPanel.
+Current target: **https://bronhighworks.com** on Spaceship. SSH is unavailable, so follow steps 1–8 using File Manager and cPanel browser Terminal if enabled (otherwise hosting support). Skip the optional SSH section unless your hosting access changes. GitHub automatically builds the upload package; the no-SSH path does not automatically transfer it to cPanel.
 
 ## 1. Get the tested package from GitHub
 
@@ -54,7 +54,7 @@ Use a new empty database for first installation. Do not run migration commands a
 APP_NAME="BRON Highworks"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://bron.serinstech.com
+APP_URL=https://bronhighworks.com
 APP_KEY=
 DB_CONNECTION=mysql
 DB_HOST=localhost
@@ -105,7 +105,7 @@ If cPanel shows separate time fields, enter only the command after the five star
 
 ## 7. Verify before launch
 
-- Open `https://bron.serinstech.com/up` (Laravel health endpoint).
+- Open `https://bronhighworks.com/up` (Laravel health endpoint).
 - Open `/` and `/site-assessment`; submit a sample request.
 - Sign in at `/admin/login` and check that the request appears.
 - Schedule a visit and create a draft quotation, both PO types, invoice and delivery order. Check printed output.

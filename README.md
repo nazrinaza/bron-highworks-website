@@ -29,6 +29,6 @@ Follow [deploy/CPANEL.md](deploy/CPANEL.md) for detailed File Manager installati
 
 ## Current hosting: cPanel Git Version Control
 
-For `bron.serinstech.com` on account `shahjaha`, use [deploy/CPANEL-GIT.md](deploy/CPANEL-GIT.md). GitHub Actions publishes the tested application with dependencies to branch `cpanel`; select that branch in cPanel and use Update from Remote / Deploy HEAD Commit. Public files deploy to `/home2/shahjaha/public_html/bron.serinstech.com/public`, while private Laravel files stay in `/home2/shahjaha/bron`.
+For `bronhighworks.com` on Spaceship account `aneowclfol`, use [deploy/CPANEL-GIT.md](deploy/CPANEL-GIT.md). GitHub Actions publishes the tested application with dependencies to branch `cpanel`; select that branch in cPanel and use Update from Remote / Deploy HEAD Commit. Public files deploy to `/home/aneowclfol/public_html`, while private Laravel files stay in `/home/aneowclfol/bron`.
 
 The repository is public: use HTTPS clone URL `https://github.com/nazrinaza/bron-highworks-website.git` in cPanel. No deploy key is needed for cloning. Server credentials and customer data remain outside Git.

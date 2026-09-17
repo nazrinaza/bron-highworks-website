@@ -16,15 +16,15 @@ with tempfile.TemporaryDirectory(prefix='bron-cpanel-install-') as temp:
     for name in ('bron-cpanel.tar.gz', 'SHA256SUMS'):
         shutil.copy2(root / 'build' / name, repo / name)
     script = repo / 'deploy/cpanel-pull.sh'
-    script.write_text(script.read_text().replace('account_dir=/home2/shahjaha', f'account_dir={account}'))
     (account / '.bron-php-path').write_text(shutil.which('php') + '\n')
+    (account / '.bron-web-root').write_text(str(account / 'public_html') + '\n')
     (app / '.env').write_text('APP_ENV=testing\nAPP_KEY=\nAPP_DEBUG=false\n')
     database = account / 'test.sqlite'
     database.touch()
-    env = os.environ | {'APP_ENV': 'testing', 'DB_CONNECTION': 'sqlite', 'DB_DATABASE': str(database),
+    env = os.environ | {'HOME': str(account), 'APP_ENV': 'testing', 'DB_CONNECTION': 'sqlite', 'DB_DATABASE': str(database),
                         'CACHE_STORE': 'array', 'SESSION_DRIVER': 'array', 'QUEUE_CONNECTION': 'sync'}
     env.pop('APP_KEY', None)
-    web = account / 'public_html/bron.serinstech.com/public'
+    web = account / 'public_html'
     (web / '.well-known').mkdir(parents=True)
     (web / '.well-known/token').write_text('ssl-token')
     for iteration in range(2):
