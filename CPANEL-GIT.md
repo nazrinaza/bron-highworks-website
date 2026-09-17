@@ -96,10 +96,14 @@ APP_MAINTENANCE_DRIVER=file
 LOG_CHANNEL=stack
 LOG_STACK=single
 LOG_LEVEL=warning
-MAIL_MAILER=log
+MAIL_MAILER=resend
 MAIL_FROM_ADDRESS=hello@bronhighworks.com
 MAIL_FROM_NAME="BRON Highworks"
+RESEND_API_KEY="YOUR_RESEND_API_KEY"
+BRON_NOTIFICATION_EMAIL=hello@bronhighworks.com
 ```
+
+Before enabling email, add and verify `bronhighworks.com` in Resend, publish the DKIM and SPF records Resend provides in the domain's authoritative DNS, and create a sending-only API key. Store the key only in the private server `.env`; never put it in GitHub or this guide. After editing `.env`, deploy again so Laravel rebuilds its configuration cache. A new assessment sends a confirmation to the customer and an alert to `BRON_NOTIFICATION_EMAIL`. Each admin document page can email its quotation, customer or supplier PO, invoice, or delivery order to an editable recipient.
 
 Use the host-confirmed database hostname if it is not `localhost`. Preserve valid dotenv quoting, especially if a password includes quotes or backslashes. Set `.env` permissions to `600` (PHP must run as the cPanel user). Leave `APP_KEY` blank only for a brand-new installation; the deployment generates it automatically. Never reset an existing application key on updates. Never commit this server `.env` to GitHub.
 
@@ -148,7 +152,7 @@ In **Cron Jobs**, select every minute and use the actual confirmed PHP executabl
 * * * * * /CONFIRMED/PHP83/PATH /home/aneowclfol/bron/artisan schedule:run >> /home/aneowclfol/bron/storage/logs/scheduler.log 2>&1
 ```
 
-If cPanel has separate time fields, paste only the command after the five stars into its Command field. This scheduler is future-ready; no business schedules are configured yet. Resend and payments are not yet integrated; outbound HTTPS alone does not enable them.
+If cPanel has separate time fields, paste only the command after the five stars into its Command field. This scheduler is future-ready; no business schedules are configured yet. Resend sends synchronously over outbound HTTPS with the current `QUEUE_CONNECTION=sync` setting.
 
 ## 7. Future updates and recovery
 
