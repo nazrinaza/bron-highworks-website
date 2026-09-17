@@ -29,7 +29,7 @@ In cPanel, verify:
 - **SSL/TLS Status:** valid HTTPS certificate for the chosen domain. Enable HTTPS redirection after the certificate is active.
 - Outbound TCP 443 with DNS and certificate validation to `api.resend.com` and your eventual payment API host. This is a hosting-provider firewall setting; the application cannot grant it.
 
-Ask support for the exact PHP 8.3 CLI executable. Common examples are `/usr/local/bin/ea-php83` or `/opt/cpanel/ea-php83/root/usr/bin/php`; neither is guaranteed. Confirm with `THE_CONFIRMED_PATH -v` and `THE_CONFIRMED_PATH -m` in cPanel Terminal or ask support to run those checks. Use that same path for setup and cron.
+Ask support for the exact PHP 8.3 CLI executable. Common examples are `/usr/local/bin/ea-php83` or `/opt/cpanel/ea-php83/root/usr/bin/php`; neither is guaranteed. Confirm with `THE_CONFIRMED_PATH -v` and `THE_CONFIRMED_PATH -m` in cPanel Terminal or ask support to run those checks. Use that path for Laravel setup and maintenance commands.
 
 ## 3. Create the database
 
@@ -97,15 +97,11 @@ The admin command privately prompts twice for a password with at least 12 charac
 
 **If Terminal and SSH are both unavailable:** upload and configure through File Manager, then ask hosting support to run these initial commands and arrange secure administrator provisioning. The interactive admin command cannot be run from an unattended cron job. This package intentionally has no public web installer. SSH is optional, but some way to execute the initial Laravel commands is required.
 
-## 6. Add the scheduler
+## 6. Scheduler (not required)
 
-In **Cron Jobs**, choose once per minute (`* * * * *`). Replace placeholders with your verified PHP executable and account:
+The current BRON application has no scheduled business tasks, so a cPanel Cron Jobs feature is not required. Skip scheduler setup on Spaceship. Resend email is sent during the web request because the application uses `QUEUE_CONNECTION=sync`.
 
-```cron
-* * * * * /CONFIRMED/PATH/TO/PHP83 /home/ACCOUNT/bron/artisan schedule:run >> /home/ACCOUNT/bron/storage/logs/scheduler.log 2>&1
-```
-
-If cPanel shows separate time fields, enter only the command after the five stars in its **Command** box. This is future-ready; the current app has no scheduled business tasks. Rotate or periodically inspect the scheduler log. A scheduler is not a queue worker. The template uses `QUEUE_CONNECTION=sync`; revisit worker setup when background integrations are added.
+If a future release adds recurring reminders, automated follow-ups, or queued background work, arrange a scheduler or worker at that time. This does not affect the current website, admin area, site-assessment notifications, or document email functions.
 
 ## 7. Verify before launch
 
@@ -180,7 +176,7 @@ Server `.env`, runtime storage, and certificate validation files are preserved. 
 - **Database access denied:** verify the cPanel prefixes, password, host and user privileges.
 - **419/session error:** verify HTTPS, `APP_URL`, session tables and cookie configuration.
 - **Routes return 404:** ensure `public/.htaccess` exists and Apache rewrite support is enabled.
-- **CLI uses another PHP version:** use the full provider-confirmed executable, including in cron.
+- **CLI uses another PHP version:** use the full provider-confirmed executable for Laravel maintenance commands.
 - **SSH host-key mismatch:** confirm a legitimate host-key change with the provider before updating the secret.
 - **Actions unavailable:** enable Actions in repository settings, check third-party action policies and private-repository billing/minute allowance.
 
