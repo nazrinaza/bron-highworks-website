@@ -177,3 +177,15 @@ If your log still says `required hosting command "rsync" is unavailable`, you ar
 The new log begins with `BRON deployment started (portable PHP copy v3).` Read the newest `/home2/shahjaha/.cpanel/logs/vc_..._git_deploy.log` for progress and errors. If that marker is absent, check the checked-out commit and the hosting task runner before retrying.
 
 Normal exits remove `/home2/shahjaha/.bron-deploy-lock` and the temporary staging directory. If the hosting provider forcibly kills a deployment, a stale lock directory may remain. Only after confirming that no deployment is running, remove that **empty lock directory** in File Manager and retry. Do not remove an active deployment lock. A permissions error while creating the lock also needs to be resolved rather than bypassed.
+
+## Files and migrations succeeded, but admin provisioning failed
+
+The application/database are already installed; do not delete the database, rerun initial setup from scratch, or regenerate `APP_KEY`.
+
+1. In File Manager, privately edit `/home2/shahjaha/bron-admin.json`. It must be a JSON object containing `name`, `email` and `password`, using double quotes with no trailing comma.
+2. `name` must be non-empty text; `email` must be a real valid email address; `password` must be text with at least 12 characters including letters and numbers. Do not leave the example placeholders unchanged.
+3. Save it with permissions `600`, owned by the cPanel account. Do not send this file or password in chat.
+4. On branch `cpanel`, click **Update from Remote**, then **Deploy HEAD Commit**. Existing migrations are preserved; the deployment retries admin creation and finishes the caches/maintenance steps.
+5. The updated helper emits `BRON ADMIN ERROR` with the exact field/format issue, without printing entered values. If it says an admin already exists because a previous run saved it, remove the provisioning JSON file and redeploy. If you do not know the existing admin password, use hosting support and `bron:admin` for recovery.
+
+Successful deployment automatically exits maintenance mode. Do not manually remove the public maintenance rules while provisioning or deployment remains incomplete.
