@@ -17,6 +17,9 @@ if [[ -f "$account_dir/.bron-web-root" ]]; then
 elif [[ -d "$account_dir/public_html/bron.serinstech.com/public" ]]; then
     # Preserve the established temporary-domain layout during the migration.
     web_dir=$account_dir/public_html/bron.serinstech.com/public
+elif [[ -d "$account_dir/bronhighworks.com" ]]; then
+    # Spaceship creates a document root named after the hosted domain.
+    web_dir=$account_dir/bronhighworks.com
 else
     web_dir=$account_dir/public_html
 fi

@@ -6,7 +6,7 @@ Use this guide for **https://bronhighworks.com** on the Spaceship cPanel account
 
 | Purpose | Exact path |
 | --- | --- |
-| Domain document root, public files only | `/home/aneowclfol/public_html` |
+| Domain document root, public files only | `/home/aneowclfol/bronhighworks.com` |
 | Private Laravel application, dependencies, `.env` and storage | `/home/aneowclfol/bron` |
 | cPanel Git repository (choose this on creation) | `/home/aneowclfol/repositories/bron-highworks` |
 | Optional web-root override (one line, outside Git) | `/home/aneowclfol/.bron-web-root` |
@@ -18,9 +18,9 @@ The public `index.php` loads Laravel from the private app directory. Keep the cu
 
 ## Spaceship document root
 
-The Spaceship hosting account serves `bronhighworks.com` from `/home/aneowclfol/public_html`. The browser URL is `https://bronhighworks.com` — do not add `/public` to the URL or `APP_URL`.
+Spaceship creates a document root folder named after the hosted domain. This account serves `bronhighworks.com` from `/home/aneowclfol/bronhighworks.com`, as confirmed in File Manager and by Spaceship's hosting documentation. The browser URL is `https://bronhighworks.com` — do not add `/public` to the URL or `APP_URL`.
 
-Create `/home/aneowclfol/.bron-web-root` in File Manager with exactly `/home/aneowclfol/public_html` on its first line. After deploying, check that `index.php`, `.htaccess`, `operations.css` and `brand/` are directly inside `public_html`, not in another nested `public` folder. Keep the private application and Git checkout at the paths shown above.
+Create `/home/aneowclfol/.bron-web-root` in File Manager with exactly `/home/aneowclfol/bronhighworks.com` on its first line. After deploying, check that `index.php`, `.htaccess`, `operations.css` and `brand/` are directly inside that domain folder, not in another nested `public` folder. Keep the private application and Git checkout at the paths shown above.
 
 If you previously deployed using the old parent-directory destination, back up and review those old public files separately. The corrected deployment only synchronizes the new `/public` destination; it does not remove files from its parent. Do not move or delete the new `public` directory during cleanup.
 
@@ -63,14 +63,14 @@ Open **cPanel → Files → Git™ Version Control → Create**:
 
 Create the repository. Open **Manage** and select **`cpanel`** as the checked-out branch. If it is not listed, wait for the GitHub Actions build to finish and refresh/update the remote branches. The default `main` branch is source-only and intentionally refuses deployment.
 
-Do not create the Git repository in `/home/aneowclfol/public_html`. If you already have a checkout there, back it up and ask support to relocate the repository before proceeding. Do not delete unrelated site files blindly.
+Do not create the Git repository in `/home/aneowclfol/bronhighworks.com`. If you already have a checkout there, back it up and ask support to relocate the repository before proceeding. Do not delete unrelated site files blindly.
 
 ## 3. Configure PHP, database, HTTPS and environment
 
 1. Set `bronhighworks.com` to PHP 8.3 in **PHP Tweaks**. Enable PDO MySQL and Laravel's required extensions.
-2. Confirm the domain points at Spaceship hosting and that HTTPS is active. Its document root stays `/home/aneowclfol/public_html`.
+2. Confirm the domain points at Spaceship hosting and that HTTPS is active. Its document root stays `/home/aneowclfol/bronhighworks.com`.
 3. The deployment automatically finds a compatible PHP 8.3+ CLI. If it reports that none is available, ask Spaceship support for the absolute PHP 8.3 CLI executable, then create `/home/aneowclfol/.bron-php-path` containing only that path.
-4. In File Manager, enable **Show Hidden Files**. Create `/home/aneowclfol/.bron-web-root` containing only `/home/aneowclfol/public_html`.
+4. In File Manager, enable **Show Hidden Files**. Create `/home/aneowclfol/.bron-web-root` containing only `/home/aneowclfol/bronhighworks.com`.
 5. Create a dedicated MySQL/MariaDB database and user through cPanel. Grant that user privileges on the BRON database only. Record the complete cPanel-prefixed names. Do not reuse the CuciNow database.
 6. Create the private folder `/home/aneowclfol/bron` and inside it a file named `.env`:
 
@@ -162,10 +162,11 @@ If Git reports a dirty checkout, do not edit deployment branch files locally. Pu
 
 ## Copy this request to hosting support if needed
 
-> Please enable cPanel Git pull deployment for Spaceship account aneowclfol, repository nazrinaza/bron-highworks-website, using the public HTTPS clone URL https://github.com/nazrinaza/bron-highworks-website.git. I do not have remote SSH access. The checkout will be /home/aneowclfol/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, tar, sha256sum and standard file utilities for .cpanel.yml tasks. The private Laravel app will be /home/aneowclfol/bron; public files will be /home/aneowclfol/public_html. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
+> Please enable cPanel Git pull deployment for Spaceship account aneowclfol, repository nazrinaza/bron-highworks-website, using the public HTTPS clone URL https://github.com/nazrinaza/bron-highworks-website.git. I do not have remote SSH access. The checkout will be /home/aneowclfol/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, tar, sha256sum and standard file utilities for .cpanel.yml tasks. The private Laravel app will be /home/aneowclfol/bron; public files will be /home/aneowclfol/bronhighworks.com. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
 
 Official references:
 
+- https://www.spaceship.com/knowledgebase/how-to-use-cpanel-file-manager/
 - https://docs.cpanel.net/knowledge-base/web-services/guide-to-git-deployment/
 - https://docs.cpanel.net/cpanel/files/git-version-control/
 
