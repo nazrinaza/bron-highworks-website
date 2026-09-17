@@ -1,0 +1,14 @@
+/work/
+/outputs/
+/.sites-runtime/
+/.openai/
+.DS_Store
+.env
+.env.*
+!.env.example
+**/vendor/
+**/node_modules/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.log
