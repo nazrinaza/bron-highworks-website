@@ -25,7 +25,7 @@ The hero image is an AI-generated illustration, not a photograph of a completed 
 
 ## cPanel deployment guide
 
-Follow [deploy/CPANEL.md](deploy/CPANEL.md) for detailed File Manager installation, database setup, admin creation, GitHub environment secrets, automated SSH updates, and recovery. The current application does not require cron.
+Follow [deploy/CPANEL.md](deploy/CPANEL.md) for detailed File Manager installation, database setup, admin creation, cron, GitHub environment secrets, automated SSH updates, and recovery.
 
 ## Current hosting: cPanel Git Version Control
 
