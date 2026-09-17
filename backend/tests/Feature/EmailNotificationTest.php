@@ -36,8 +36,14 @@ class EmailNotificationTest extends TestCase
         Mail::assertQueued(NewAssessmentNotificationMail::class, fn (NewAssessmentNotificationMail $mail): bool => $mail->hasTo('operations@bronhighworks.com'));
 
         $visit = SiteVisit::firstOrFail();
-        $this->assertStringContainsString($visit->reference, (new AssessmentConfirmationMail($visit))->render());
-        $this->assertStringContainsString('Open in BRON Admin', (new NewAssessmentNotificationMail($visit))->render());
+        $confirmationHtml = (new AssessmentConfirmationMail($visit))->render();
+        $notificationHtml = (new NewAssessmentNotificationMail($visit))->render();
+        $this->assertStringContainsString($visit->reference, $confirmationHtml);
+        $this->assertStringContainsString('<img', $confirmationHtml);
+        $this->assertStringNotContainsString('>BRON HIGHWORKS<', $confirmationHtml);
+        $this->assertStringContainsString('Open in BRON Admin', $notificationHtml);
+        $this->assertStringContainsString('<img', $notificationHtml);
+        $this->assertStringNotContainsString('>BRON HIGHWORKS<', $notificationHtml);
     }
 
     public function test_admin_can_email_every_business_document_type(): void
@@ -55,7 +61,10 @@ class EmailNotificationTest extends TestCase
                 'recipient' => 'recipient@example.test',
             ])->assertSessionHasNoErrors()->assertSessionHas('success');
 
-            $this->assertStringContainsString($document->number, (new BusinessDocumentMail($document->load('payments')))->render());
+            $documentHtml = (new BusinessDocumentMail($document->load('payments')))->render();
+            $this->assertStringContainsString($document->number, $documentHtml);
+            $this->assertStringContainsString('<img', $documentHtml);
+            $this->assertStringNotContainsString('>BRON HIGHWORKS<', $documentHtml);
         }
 
         Mail::assertQueued(BusinessDocumentMail::class, 5);
