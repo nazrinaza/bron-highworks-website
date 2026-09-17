@@ -6,7 +6,7 @@ exec 1>&2
 # cPanel task runners may provide a smaller PATH than an interactive shell.
 export PATH="${PATH:-/usr/bin:/bin}:/usr/local/bin:/usr/bin:/bin"
 trap 'code=$?; printf "BRON ERROR: deployment stopped at script line %s (exit %s). See the preceding message.\n" "$LINENO" "$code" >&2; exit "$code"' ERR
-printf 'BRON deployment started (diagnostics v2).\n' >&2
+printf 'BRON deployment started (portable PHP copy v3).\n' >&2
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 account_dir=/home2/shahjaha
 app_dir=$account_dir/bron
@@ -19,20 +19,30 @@ php_bin=${php_bin%$'\r'}
 [[ -f "$app_dir/.env" ]] || { echo 'Create /home2/shahjaha/bron/.env first. Follow CPANEL-GIT.md.'; exit 1; }
 [[ ! -L "$app_dir" && ! -L "$web_dir" ]] || { echo 'Deployment directories must not be symlinks.'; exit 1; }
 printf 'BRON: checking hosting deployment tools.\n' >&2
-for required_tool in rsync flock sha256sum tar mktemp mkdir cp find chmod date rm; do
+for required_tool in sha256sum tar mktemp mkdir cp chmod date rm rmdir; do
     if ! command -v "$required_tool" >/dev/null 2>&1; then
         printf 'BRON ERROR: required hosting command "%s" is unavailable. Ask hosting support to enable it for cPanel Git deployment tasks. No application files have been copied.\n' "$required_tool" >&2
         exit 1
     fi
 done
 printf 'BRON: hosting tools found; checking lock, archive and PHP.\n' >&2
-exec 9>"$account_dir/.bron-deploy.lock"
-flock -n 9 || { echo 'Another deployment is running.'; exit 1; }
+lock_dir="$account_dir/.bron-deploy-lock"
+if ! mkdir "$lock_dir"; then
+    echo 'BRON ERROR: cannot acquire deployment lock. Another deployment may be running, or the lock is stale. See CPANEL-GIT.md.'
+    exit 1
+fi
+staging=''
+cleanup() {
+    result=$?
+    if [[ -n "$staging" ]]; then rm -rf -- "$staging"; fi
+    rmdir "$lock_dir" || true
+    exit "$result"
+}
+trap cleanup EXIT
 cd "$repo_dir"
 sha256sum -c SHA256SUMS --ignore-missing
 "$php_bin" -r 'if (PHP_VERSION_ID < 80300 || !extension_loaded("pdo_mysql")) { fwrite(STDERR, "PHP 8.3 and PDO MySQL are required.\n"); exit(1); }'
 staging=$(mktemp -d "$account_dir/.bron-stage.XXXXXXXX")
-trap 'rm -rf -- "$staging"' EXIT
 tar -xzf "$repo_dir/bron-cpanel.tar.gz" -C "$staging"
 "$php_bin" -r 'require $argv[1];' "$staging/bron/vendor/composer/platform_check.php"
 mkdir -p "$app_dir/storage" "$web_dir"
@@ -59,16 +69,12 @@ ErrorDocument 503 "BRON is undergoing maintenance. Please try again shortly."
 MAINTENANCE
 trap 'code=$?; printf "BRON ERROR: deployment stopped at script line %s (exit %s); the site remains in maintenance.\n" "$LINENO" "$code" >&2; exit "$code"' ERR
 printf 'BRON: copying application and public files.\n' >&2
-# Excluded runtime paths remain untouched; stale code files are removed.
-rsync -a --delete --exclude='/.env' --exclude='/storage/' "$staging/bron/" "$app_dir/"
-# Initialize missing runtime directories without overwriting existing files.
-rsync -a --ignore-existing "$staging/bron/storage/" "$app_dir/storage/"
-rsync -a --delete --exclude='/.htaccess' --exclude='/.well-known/' --exclude='/storage' "$staging/bron/public/" "$web_dir/"
+# Preserve secrets/runtime paths and remove stale code without requiring rsync.
+"$php_bin" "$repo_dir/deploy/sync-files.php" "$staging/bron" "$app_dir" app
+"$php_bin" "$repo_dir/deploy/sync-files.php" "$staging/bron/storage" "$app_dir/storage" storage
+"$php_bin" "$repo_dir/deploy/sync-files.php" "$staging/bron/public" "$web_dir" public
 cp "$repo_dir/deploy/public-index.php" "$web_dir/index.php"
-find "$app_dir" -path "$app_dir/storage" -prune -o -type d -exec chmod 755 {} +
-find "$app_dir" -path "$app_dir/storage" -prune -o -type f ! -name '.env' -exec chmod 644 {} +
-find "$web_dir" -path "$web_dir/.well-known" -prune -o -type d -exec chmod 755 {} +
-find "$web_dir" -path "$web_dir/.well-known" -prune -o -type f -exec chmod 644 {} +
+chmod 644 "$web_dir/index.php"
 chmod 600 "$app_dir/.env"
 cd "$app_dir"
 "$php_bin" artisan config:clear

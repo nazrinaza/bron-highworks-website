@@ -31,7 +31,7 @@ If you previously deployed using the old parent-directory destination, back up a
 4. In cPanel, **Update from Remote** retrieves the new `cpanel` commit.
 5. **Deploy HEAD Commit** runs `.cpanel.yml`, which installs the private app, publishes only public files, runs migrations, and refreshes caches.
 
-No Composer, Node or remote shell login is required on hosting. cPanel must be allowed to execute deployment commands and provide Bash, rsync, flock, tar, sha256sum, and a PHP 8.3 CLI executable. Tests run in GitHub; the actual host is still to be verified. cPanel does not automatically pull GitHub just because a GitHub build succeeded.
+No Composer, Node or remote shell login is required on hosting. cPanel must be allowed to execute deployment commands and provide Bash, tar, sha256sum and standard file utilities, and a PHP 8.3 CLI executable. Tests run in GitHub; the actual host is still to be verified. cPanel does not automatically pull GitHub just because a GitHub build succeeded.
 
 **Hosting prerequisite:** cPanel documents that accounts without shell access can only create, clone, delete and view repositories. If your account has shell access entirely disabled, the provider must enable the required shell/deployment entitlement (often jailed shell) before Pull/Deploy can work. You can still operate through the cPanel UI without logging in over SSH. Simply seeing the Git icon does not prove deployment is enabled.
 
@@ -157,25 +157,23 @@ The private `bron-backups` folder stores code/public backups and `.env`; it is n
 
 If rollback is necessary, have support restore matching code/public files and assess whether the database requires its pre-deployment backup. Database restoration can lose newer requests. Do not run `migrate:fresh`, seed demo data, or regenerate `APP_KEY` on a live installation.
 
-If Git reports a dirty checkout, do not edit deployment branch files locally. Put settings in the private files described above. If a PHP path, rsync, flock, permission, extension, or Git authentication error appears, send that error to support without exposing credentials.
+If Git reports a dirty checkout, do not edit deployment branch files locally. Put settings in the private files described above. If a PHP path, archive utility, permission, extension, or Git authentication error appears, send that error to support without exposing credentials.
 
 ## Copy this request to hosting support if needed
 
-> Please enable cPanel Git pull deployment for account shahjaha, repository nazrinaza/bron-highworks-website, using the public HTTPS clone URL https://github.com/nazrinaza/bron-highworks-website.git (no deploy key required). I do not have remote SSH access. The checkout will be /home2/shahjaha/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, rsync, flock, tar and sha256sum for .cpanel.yml tasks. The private Laravel app will be /home2/shahjaha/bron; public files will remain at /home2/shahjaha/public_html/bron.serinstech.com/public. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
+> Please enable cPanel Git pull deployment for account shahjaha, repository nazrinaza/bron-highworks-website, using the public HTTPS clone URL https://github.com/nazrinaza/bron-highworks-website.git (no deploy key required). I do not have remote SSH access. The checkout will be /home2/shahjaha/repositories/bron-highworks on branch cpanel. Please confirm the PHP 8.3 CLI executable and availability of Bash, tar, sha256sum and standard file utilities for .cpanel.yml tasks. The private Laravel app will be /home2/shahjaha/bron; public files will remain at /home2/shahjaha/public_html/bron.serinstech.com/public. Please confirm PDO MySQL, writable storage/bootstrap cache, Apache rewrite support, HTTPS and outbound HTTPS to api.resend.com and the eventual payment provider.
 
 Official references:
 
 - https://docs.cpanel.net/knowledge-base/web-services/guide-to-git-deployment/
 - https://docs.cpanel.net/cpanel/files/git-version-control/
 
-## Deployment exits immediately with code 1 and no files appear
+## Shared hosting without rsync or flock
 
-The deployment script now prints `BRON deployment started (diagnostics v2).` immediately and reports missing hosting tools by name. Early errors occur before files are copied to the public directory.
+The current deployment uses PHP's filesystem functions to synchronize application/public files and an atomic lock directory to prevent concurrent deployments. It does **not** require the `rsync` or `flock` commands. It preserves `.env`, runtime storage, SSL verification files and the maintenance response until installation completes; stale code is removed.
 
-1. Wait for the latest GitHub Actions run to finish both build and publish-cpanel jobs.
-2. In cPanel confirm branch `cpanel`, click **Update from Remote**, then **Deploy HEAD Commit**.
-3. In File Manager enable **Show Hidden Files** and open `/home2/shahjaha/.cpanel/logs`.
-4. Open the newest `vc_..._git_deploy.log` and look for the `BRON` messages. If the new startup marker is absent, the updated script has not run or the hosting task runner is failing before it starts. Check the checked-out commit and `/home2/shahjaha/.cpanel/logs/user_task_runner.log` with support.
-5. If the error names `rsync`, `flock`, or another command, ask support to enable that command for the account's Git deployment environment. A command available elsewhere on the host may still be unavailable in a jailed deployment task.
+If your log still says `required hosting command "rsync" is unavailable`, you are running the older script. Wait for the latest GitHub Actions build and publish-cpanel jobs to succeed, select branch `cpanel`, click **Update from Remote**, then **Deploy HEAD Commit**.
 
-The prior script silently exited if `rsync` or `flock` was unavailable. That is a possible cause of a log containing only `Task completed with exit code 1`, but the new diagnostic message is needed to confirm the actual cause. Do not remove locking or copy the full Laravel app into the public directory to work around this.
+The new log begins with `BRON deployment started (portable PHP copy v3).` Read the newest `/home2/shahjaha/.cpanel/logs/vc_..._git_deploy.log` for progress and errors. If that marker is absent, check the checked-out commit and the hosting task runner before retrying.
+
+Normal exits remove `/home2/shahjaha/.bron-deploy-lock` and the temporary staging directory. If the hosting provider forcibly kills a deployment, a stale lock directory may remain. Only after confirming that no deployment is running, remove that **empty lock directory** in File Manager and retry. Do not remove an active deployment lock. A permissions error while creating the lock also needs to be resolved rather than bypassed.
