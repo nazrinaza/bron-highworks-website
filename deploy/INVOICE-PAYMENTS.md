@@ -13,6 +13,6 @@ The invoice automatically becomes **Partially paid** or **Paid**. Payment histor
 
 This records payments received outside BRON. It does not process card or FPX payments, connect to a gateway, or verify bank settlement. Never enter card numbers or banking credentials.
 
-Payment entries cannot currently be edited, deleted, refunded or reversed in the admin. Check details before recording. Invoices with recorded payments cannot be cancelled through the status dropdown. Existing invoices marked paid before this feature retain their status and display a notice that no payment details were recorded; no amounts or methods are invented for them.
+Payment entries cannot currently be edited, deleted, refunded or reversed in the admin. Check details before recording. Invoices with recorded payments cannot be cancelled through the status dropdown. Existing invoices marked paid before this feature retain their status and display a notice that no payment details were recorded; no amounts or methods are invented for them. An admin may explicitly record their full historical payment details; partial entries are not accepted for these already settled invoices.
 
 Deployment uses the normal GitHub Actions build and cPanel Pull / Deploy workflow. The additive migration creates invoice_payments; it does not change existing invoice totals or payment statuses. Take a database backup using cPanel before deployment.

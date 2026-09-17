@@ -31,8 +31,12 @@ class InvoicePaymentController extends Controller
             if ($invoice->revision !== (int) $data['revision']) {
                 throw ValidationException::withMessages(['revision' => 'This invoice changed. Reload before recording a payment.']);
             }
-            if ($invoice->type !== 'invoice' || ! in_array($invoice->status, ['issued', 'partially_paid'], true)) {
+            $legacyPaid = $invoice->status === 'paid' && $invoice->payments->isEmpty();
+            if ($invoice->type !== 'invoice' || (! in_array($invoice->status, ['issued', 'partially_paid'], true) && ! $legacyPaid)) {
                 throw ValidationException::withMessages(['payment' => 'Payments can only be recorded against issued or partially paid invoices.']);
+            }
+            if ($legacyPaid && $data['payment_type'] !== 'full') {
+                throw ValidationException::withMessages(['payment_type' => 'This invoice was already marked paid. Record the full historical payment details to preserve its settled status.']);
             }
             $balance = $invoice->balanceCents();
             $amount = $data['payment_type'] === 'full' ? $balance : BusinessDocument::cents((string) $data['amount']);

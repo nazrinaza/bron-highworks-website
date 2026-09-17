@@ -54,7 +54,7 @@ class InvoicePaymentTest extends TestCase
         $this->post($url, $this->payment())->assertRedirect('/admin/login');
         $this->actingAs(User::factory()->create())->post($url, $this->payment())->assertForbidden();
         $this->actingAs(User::factory()->create(['is_admin' => true]));
-        foreach ([['invoice', 'draft'], ['invoice', 'cancelled'], ['invoice', 'paid'], ['quotation', 'issued']] as [$type, $status]) {
+        foreach ([['invoice', 'draft'], ['invoice', 'cancelled'], ['quotation', 'issued']] as [$type, $status]) {
             $other = BusinessDocument::factory()->create(compact('type', 'status'));
             $this->post(route('admin.documents.payments.store', $other), $this->payment())->assertSessionHasErrors('payment');
         }
@@ -69,6 +69,10 @@ class InvoicePaymentTest extends TestCase
         $this->actingAs(User::factory()->create(['is_admin' => true]));
         $legacy = BusinessDocument::factory()->create(['type' => 'invoice', 'status' => 'paid']);
         $this->get(route('admin.documents.show', $legacy))->assertOk()->assertSee('previously marked paid')->assertDontSee('Balance due');
+        $this->post(route('admin.documents.payments.store', $legacy), $this->payment())->assertSessionHasErrors('payment_type');
+        $this->post(route('admin.documents.payments.store', $legacy), $this->payment(['payment_type' => 'full', 'amount' => null]))->assertSessionHasNoErrors();
+        $this->assertSame('paid', $legacy->fresh()->status);
+        $this->assertSame(0, $legacy->fresh()->balanceCents());
         $doc = BusinessDocument::factory()->create(['type' => 'invoice', 'status' => 'issued']);
         $this->post(route('admin.documents.payments.store', $doc), $this->payment(['notes' => '<script>alert(1)</script>']))->assertSessionHasNoErrors();
         $this->get(route('admin.documents.show', $doc))->assertOk()->assertDontSee('<script>alert(1)</script>', false)->assertSee('&lt;script&gt;', false);

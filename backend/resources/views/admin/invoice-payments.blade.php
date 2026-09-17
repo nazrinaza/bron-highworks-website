@@ -1,18 +1,19 @@
 <section class="panel top-gap no-print" aria-labelledby="payments-heading">
+@php($legacyPaid = $document->status==='paid' && $document->payments->isEmpty())
 <h2 id="payments-heading">Invoice payments</h2>
 @if($document->status==='paid' && $document->payments->isEmpty())
 <p>This invoice was previously marked paid. No payment amount, date or method was recorded in the earlier system.</p>
 @else
 <div class="grid"><p>Recorded payments<br><strong>MYR {{ number_format($document->recordedPaidCents()/100,2) }}</strong></p><p>Remaining balance<br><strong>MYR {{ number_format($document->balanceCents()/100,2) }}</strong></p></div>
 @endif
-@if(in_array($document->status,['issued','partially_paid'],true))
-<h3>Record payment</h3>
+@if(in_array($document->status,['issued','partially_paid'],true) || $legacyPaid)
+<h3>{{ $legacyPaid ? 'Record historical payment details' : 'Record payment' }}</h3>
 <p class="muted">Record money already received. This form does not charge a card or initiate an FPX transaction.</p>
 <form method="post" action="{{ route('admin.documents.payments.store',$document) }}">
 @csrf
 <input type="hidden" name="revision" value="{{ $document->revision }}">
 <div class="grid">
-<label>Payment type<select name="payment_type" required><option value="full" @selected(old('payment_type')==='full')>Full payment — settle remaining balance</option><option value="partial" @selected(old('payment_type')==='partial')>Partial payment</option></select></label>
+<label>Payment type<select name="payment_type" required><option value="full" @selected(old('payment_type')==='full')>Full payment — settle remaining balance</option>@unless($legacyPaid)<option value="partial" @selected(old('payment_type')==='partial')>Partial payment</option>@endunless</select></label>
 <label>Partial amount (MYR)<input type="number" name="amount" min="0.01" step="0.01" max="{{ number_format($document->balanceCents()/100,2,'.','') }}" value="{{ old('amount') }}"><small>Required for partial payment. Full payment uses the remaining balance automatically.</small></label>
 <label>Payment method<select name="method" required><option value="">Choose a method</option>@foreach(\App\Models\InvoicePayment::METHODS as $key=>$label)<option value="{{ $key }}" @selected(old('method')===$key)>{{ $label }}</option>@endforeach</select></label>
 <label>Payment date<input type="date" name="paid_on" required max="{{ today()->toDateString() }}" value="{{ old('paid_on',today()->toDateString()) }}"></label>
