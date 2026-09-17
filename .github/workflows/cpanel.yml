@@ -63,7 +63,9 @@ jobs:
       - name: Build cPanel archives
         run: python3 deploy/package.py
       - name: Verify production package and initial admin provisioning
-        run: python3 deploy/test_release.py
+        run: |
+          python3 deploy/test_release.py
+          python3 deploy/test_preflight.py
       - name: Store installation package and checksum
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

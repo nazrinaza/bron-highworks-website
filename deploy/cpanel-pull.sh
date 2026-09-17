@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 umask 077
+# Keep all diagnostics on the task runner error stream.
+exec 1>&2
+# cPanel task runners may provide a smaller PATH than an interactive shell.
+export PATH="${PATH:-/usr/bin:/bin}:/usr/local/bin:/usr/bin:/bin"
+trap 'code=$?; printf "BRON ERROR: deployment stopped at script line %s (exit %s). See the preceding message.\n" "$LINENO" "$code" >&2; exit "$code"' ERR
+printf 'BRON deployment started (diagnostics v2).\n' >&2
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 account_dir=/home2/shahjaha
 app_dir=$account_dir/bron
@@ -12,8 +18,14 @@ php_bin=${php_bin%$'\r'}
 [[ "$php_bin" = /* && -x "$php_bin" ]] || { echo 'Invalid PHP CLI path.'; exit 1; }
 [[ -f "$app_dir/.env" ]] || { echo 'Create /home2/shahjaha/bron/.env first. Follow CPANEL-GIT.md.'; exit 1; }
 [[ ! -L "$app_dir" && ! -L "$web_dir" ]] || { echo 'Deployment directories must not be symlinks.'; exit 1; }
-command -v rsync >/dev/null
-command -v flock >/dev/null
+printf 'BRON: checking hosting deployment tools.\n' >&2
+for required_tool in rsync flock sha256sum tar mktemp mkdir cp find chmod date rm; do
+    if ! command -v "$required_tool" >/dev/null 2>&1; then
+        printf 'BRON ERROR: required hosting command "%s" is unavailable. Ask hosting support to enable it for cPanel Git deployment tasks. No application files have been copied.\n' "$required_tool" >&2
+        exit 1
+    fi
+done
+printf 'BRON: hosting tools found; checking lock, archive and PHP.\n' >&2
 exec 9>"$account_dir/.bron-deploy.lock"
 flock -n 9 || { echo 'Another deployment is running.'; exit 1; }
 cd "$repo_dir"
@@ -45,7 +57,8 @@ RewriteEngine On
 RewriteRule ^ - [R=503,L]
 ErrorDocument 503 "BRON is undergoing maintenance. Please try again shortly."
 MAINTENANCE
-trap 'echo "Deployment failed; the site remains in maintenance. Review cPanel deployment logs and CPANEL-GIT.md."' ERR
+trap 'code=$?; printf "BRON ERROR: deployment stopped at script line %s (exit %s); the site remains in maintenance.\n" "$LINENO" "$code" >&2; exit "$code"' ERR
+printf 'BRON: copying application and public files.\n' >&2
 # Excluded runtime paths remain untouched; stale code files are removed.
 rsync -a --delete --exclude='/.env' --exclude='/storage/' "$staging/bron/" "$app_dir/"
 # Initialize missing runtime directories without overwriting existing files.
