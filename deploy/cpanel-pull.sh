@@ -90,6 +90,7 @@ RewriteEngine On
 RewriteRule ^ - [R=503,L]
 ErrorDocument 503 "BRON is undergoing maintenance. Please try again shortly."
 MAINTENANCE
+chmod 644 "$web_dir/.htaccess"
 trap 'code=$?; printf "BRON ERROR: deployment stopped at script line %s (exit %s); the site remains in maintenance.\n" "$LINENO" "$code" >&2; exit "$code"' ERR
 printf 'BRON: copying application and public files.\n' >&2
 # Preserve secrets/runtime paths and remove stale code without requiring rsync.
@@ -101,10 +102,8 @@ chmod 644 "$web_dir/index.php"
 chmod 600 "$app_dir/.env"
 cd "$app_dir"
 "$php_bin" artisan config:clear
-if [[ "$initial" == 1 ]]; then
-    if ! "$php_bin" -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); exit(config("app.key") ? 0 : 1);'; then
-        "$php_bin" artisan key:generate --force
-    fi
+if ! "$php_bin" -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); exit(config("app.key") ? 0 : 1);'; then
+    "$php_bin" artisan key:generate --force
 fi
 "$php_bin" artisan migrate --force
 if [[ -f "$account_dir/bron-admin.json" ]]; then
