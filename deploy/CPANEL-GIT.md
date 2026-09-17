@@ -146,13 +146,15 @@ Open:
 
 Submit a test assessment, sign in with the admin credentials, and verify visits/documents. Check HTTPS and that private files are inaccessible. Confirm `bron-admin.json` was removed. Back up the database, `.env` including `APP_KEY`, and private uploaded files.
 
-In **Cron Jobs**, select every minute and use the actual confirmed PHP executable:
+In **Cron Jobs**, select every minute and use the actual verified PHP executable:
 
 ```cron
-* * * * * /CONFIRMED/PHP83/PATH /home/aneowclfol/bron/artisan schedule:run >> /home/aneowclfol/bron/storage/logs/scheduler.log 2>&1
+* * * * * /VERIFIED/PHP/PATH /home/aneowclfol/bron/artisan schedule:run >> /dev/null 2>&1
 ```
 
-If cPanel has separate time fields, paste only the command after the five stars into its Command field. This scheduler is future-ready; no business schedules are configured yet. Resend sends synchronously over outbound HTTPS with the current `QUEUE_CONNECTION=sync` setting.
+Replace `/VERIFIED/PHP/PATH` with the PHP 8.3 CLI path confirmed by Spaceship; do not leave the placeholder in the saved command. If cPanel has separate time fields, enter `*` in each of the five time fields and paste only the command after the five stars into its **Command** field.
+
+If the **Cron Jobs** menu is absent, send the exact completed line to Spaceship support and ask them to add it to the `aneowclfol` account crontab. Uploading or saving a shell file by itself will not schedule it. The entry is future-ready; no business schedules are configured yet. Resend sends synchronously over outbound HTTPS with the current `QUEUE_CONNECTION=sync` setting.
 
 ## 7. Future updates and recovery
 
