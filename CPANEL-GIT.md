@@ -119,7 +119,7 @@ For a **new installation with no admin yet**, use File Manager to create `/home/
 }
 ```
 
-Replace both placeholders. Use a unique password with at least 12 characters including letters and numbers. This is JSON: quotes and backslashes inside values must be escaped. Set file permissions to `600` before deploying. Do not put credentials in GitHub, `.cpanel.yml`, URLs, cron commands, or chat.
+Replace both placeholders. Use a unique password with at least 12 characters including letters and numbers. This is JSON: quotes and backslashes inside values must be escaped. Set file permissions to `600` before deploying. Do not put credentials in GitHub, `.cpanel.yml`, URLs, deployment commands, or chat.
 
 The CLI-only provisioning helper validates this file, creates the first admin, hashes the password, and deletes the file after success. It refuses to reset existing users or create another admin if one already exists. It has no public web route. If deployment reports that provisioning failed after the admin was saved, remove the leftover file manually before retrying. Additional staff accounts/password resets use the existing interactive `bron:admin` command through support or Terminal.
 
@@ -136,7 +136,7 @@ Deployment checks the package checksum and PHP version, locks concurrent deploym
 
 If your hosting cannot execute these tasks, ask support to enable cPanel Git deployment commands for the account. Remote SSH login itself is not required for clicking Deploy HEAD Commit.
 
-## 6. Verify and add cron
+## 6. Verify the deployment
 
 Open:
 
@@ -146,13 +146,9 @@ Open:
 
 Submit a test assessment, sign in with the admin credentials, and verify visits/documents. Check HTTPS and that private files are inaccessible. Confirm `bron-admin.json` was removed. Back up the database, `.env` including `APP_KEY`, and private uploaded files.
 
-In **Cron Jobs**, select every minute and use the actual confirmed PHP executable:
+Spaceship does not need to provide Cron Jobs for the current BRON application. No business schedules are configured. Resend sends synchronously over outbound HTTPS with the current `QUEUE_CONNECTION=sync` setting, so assessment notifications and admin-sent documents work without cron.
 
-```cron
-* * * * * /CONFIRMED/PHP83/PATH /home/aneowclfol/bron/artisan schedule:run >> /home/aneowclfol/bron/storage/logs/scheduler.log 2>&1
-```
-
-If cPanel has separate time fields, paste only the command after the five stars into its Command field. This scheduler is future-ready; no business schedules are configured yet. Resend sends synchronously over outbound HTTPS with the current `QUEUE_CONNECTION=sync` setting.
+If a future release adds recurring reminders, automated follow-ups, or queued background work, arrange a scheduler or worker at that time.
 
 ## 7. Future updates and recovery
 
