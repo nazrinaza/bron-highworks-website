@@ -6,6 +6,7 @@ use App\Models\BusinessDocument;
 use App\Models\SiteVisit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class OperationsTest extends TestCase
@@ -121,6 +122,35 @@ class OperationsTest extends TestCase
         $this->patch(route('admin.documents.status', $doc), ['status' => 'draft', 'revision' => 3])->assertSessionHasErrors('status');
         $this->patch(route('admin.documents.status', $doc), ['status' => 'accepted', 'revision' => 3])->assertSessionHasNoErrors();
         $this->assertSame('accepted', $doc->fresh()->status);
+    }
+
+    public function test_document_updates_work_when_database_returns_revision_as_text(): void
+    {
+        $doc = BusinessDocument::factory()->create();
+        $statusDoc = BusinessDocument::factory()->create();
+        $this->actingAs($this->admin());
+        $pdo = DB::connection()->getPdo();
+        $original = $pdo->getAttribute(\PDO::ATTR_STRINGIFY_FETCHES);
+        $pdo->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, true);
+
+        try {
+            $this->patch(route('admin.documents.status', $statusDoc), ['status' => 'issued', 'revision' => '1'])
+                ->assertSessionHasNoErrors();
+            $this->assertSame('issued', $statusDoc->fresh()->status);
+            $this->put(route('admin.documents.update', $doc), $this->document() + ['revision' => '1'])
+                ->assertSessionHasNoErrors();
+            $this->patch(route('admin.documents.status', $doc), ['status' => 'issued', 'revision' => '2'])
+                ->assertSessionHasNoErrors();
+            $this->assertSame('issued', $doc->fresh()->status);
+            $this->patch(route('admin.documents.status', $doc), ['status' => 'accepted', 'revision' => '2'])
+                ->assertSessionHasErrors('revision');
+            $this->assertSame('issued', $doc->fresh()->status);
+            $this->patch(route('admin.documents.status', $doc), ['status' => 'accepted', 'revision' => '3'])
+                ->assertSessionHasNoErrors();
+            $this->assertSame('accepted', $doc->fresh()->status);
+        } finally {
+            $pdo->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, $original);
+        }
     }
 
     public function test_linked_document_must_use_same_visit(): void

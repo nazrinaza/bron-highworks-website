@@ -29,7 +29,7 @@ class BusinessDocument extends Model
 
     protected function casts(): array
     {
-        return ['items' => 'array', 'issued_on' => 'date', 'due_on' => 'date'];
+        return ['revision' => 'integer', 'items' => 'array', 'issued_on' => 'date', 'due_on' => 'date'];
     }
 
     public function visit(): BelongsTo
