@@ -12,3 +12,7 @@
 *.sqlite-shm
 *.sqlite-wal
 *.log
+
+/build/
+/artifact/
+__pycache__/

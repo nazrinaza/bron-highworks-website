@@ -9,7 +9,7 @@ BRON Highworks website and Laravel operations application for drone-powered buil
 
 See [backend/README.md](backend/README.md) for installation, admin account creation, cPanel deployment, and workflow details. Requires PHP 8.3+. Point the hosting domain document root to `backend/public` when deploying this repository layout. Use a dedicated MySQL/MariaDB database and HTTPS in production.
 
-Dependencies are pinned in `backend/composer.lock`; vendor files, local databases, credentials, and runtime files are excluded. The current app uses ready-to-serve CSS and JavaScript and does not require a frontend build. GitHub Actions, automatic deployment, Resend email, and payment integrations are not configured yet.
+Dependencies are pinned in `backend/composer.lock`; vendor files, local databases, credentials, and runtime files are excluded. The current app uses ready-to-serve CSS and JavaScript and does not require a frontend build. GitHub Actions tests and builds a cPanel installation package on every push to `main`. Optional SSH updates are available through manual workflow dispatch after server configuration. Resend email and payment integrations are not configured yet.
 
 ## Verification
 
@@ -22,3 +22,7 @@ Primary colour: `#cbdd29`. WhatsApp: +60 19-652 2238. Email: hello@bronhighworks
 Office: 316-B, Lorong Kedah, Taman Melawati, 53100 Kuala Lumpur, Malaysia.
 
 The hero image is an AI-generated illustration, not a photograph of a completed BRON project.
+
+## cPanel deployment guide
+
+Follow [deploy/CPANEL.md](deploy/CPANEL.md) for detailed File Manager installation, database setup, admin creation, cron, GitHub environment secrets, automated SSH updates, and recovery.

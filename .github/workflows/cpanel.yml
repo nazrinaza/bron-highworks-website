@@ -1,0 +1,114 @@
+name: BRON cPanel
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy to configured cPanel server over SSH (initial installation required)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: bron-cpanel-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: ci-only-password
+          MARIADB_DATABASE: bron_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, pdo_sqlite, dom, fileinfo, curl, xml
+          tools: composer:v2
+          coverage: none
+      - name: Install development dependencies
+        working-directory: backend
+        run: |
+          composer validate --no-check-publish
+          composer install --prefer-dist --no-interaction --no-progress
+          cp .env.example .env
+          php artisan key:generate --force
+      - name: Test with SQLite
+        working-directory: backend
+        run: vendor/bin/phpunit
+      - name: Test with MariaDB 11.4
+        working-directory: backend
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: bron_test
+          DB_USERNAME: root
+          DB_PASSWORD: ci-only-password
+        run: vendor/bin/phpunit
+      - name: Install production dependencies
+        working-directory: backend
+        run: |
+          composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          composer check-platform-reqs --no-dev
+      - name: Build cPanel archives
+        run: python3 deploy/package.py
+      - name: Store installation package and checksum
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bron-cpanel-${{ github.sha }}
+          path: |
+            build/bron-cpanel.zip
+            build/bron-cpanel.tar.gz
+            build/SHA256SUMS
+            deploy/CPANEL.md
+          retention-days: 30
+          if-no-files-found: error
+      - name: Explain next step
+        run: |
+          echo 'Download the artifact, then follow deploy/CPANEL.md. No server changes occur on a normal push.' >> "$GITHUB_STEP_SUMMARY"
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
+    needs: build
+    permissions:
+      contents: read
+      actions: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: bron-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Download this run's tested package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$GITHUB_RUN_ID" --name "bron-cpanel-$GITHUB_SHA" --dir artifact
+      - name: Deploy existing cPanel installation
+        env:
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          CPANEL_KNOWN_HOSTS: ${{ secrets.CPANEL_KNOWN_HOSTS }}
+          CPANEL_APP_DIR: ${{ vars.CPANEL_APP_DIR }}
+          CPANEL_PHP: ${{ vars.CPANEL_PHP }}
+          BRON_URL: ${{ vars.BRON_URL }}
+        run: python3 deploy/ssh_deploy.py
