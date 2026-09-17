@@ -5,7 +5,7 @@ import tempfile
 
 root = Path(__file__).resolve().parents[1]
 source = (root / 'deploy/cpanel-pull.sh').read_text()
-for missing in ('rsync', 'flock'):
+for missing in ('tar', 'mktemp'):
     with tempfile.TemporaryDirectory(prefix='bron-preflight-') as temporary:
         temp = Path(temporary)
         (temp / 'deploy').mkdir()
@@ -22,6 +22,6 @@ for missing in ('rsync', 'flock'):
         result = subprocess.run(['/bin/bash', '-c', wrapper, 'test', missing, str(script)], capture_output=True, text=True)
         assert result.returncode == 1, result
         assert f'required hosting command "{missing}" is unavailable' in result.stderr, result.stderr
-        assert 'diagnostics v2' in result.stderr
+        assert 'portable PHP copy v3' in result.stderr
         assert not (account / 'public_html').exists()
-print('Missing rsync/flock report actionable errors before copying files.')
+print('Missing required archive tools report actionable errors before copying files.')
