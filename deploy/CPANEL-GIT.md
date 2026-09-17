@@ -90,7 +90,7 @@ SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
 SESSION_LIFETIME=120
 CACHE_STORE=database
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 FILESYSTEM_DISK=local
 APP_MAINTENANCE_DRIVER=file
 LOG_CHANNEL=stack
@@ -103,7 +103,7 @@ RESEND_API_KEY="YOUR_RESEND_API_KEY"
 BRON_NOTIFICATION_EMAIL=hello@bronhighworks.com
 ```
 
-Before enabling email, add and verify `bronhighworks.com` in Resend, publish the DKIM and SPF records Resend provides in the domain's authoritative DNS, and create a sending-only API key. Store the key only in the private server `.env`; never put it in GitHub or this guide. After editing `.env`, deploy again so Laravel rebuilds its configuration cache. A new assessment sends a confirmation to the customer and an alert to `BRON_NOTIFICATION_EMAIL`. Each admin document page can email its quotation, customer or supplier PO, invoice, or delivery order to an editable recipient.
+Before enabling email, add and verify `bronhighworks.com` in Resend, publish the DKIM and SPF records Resend provides in the domain's authoritative DNS, and create a sending-only API key. Store the key only in the private server `.env`; never put it in GitHub or this guide. After editing `.env`, deploy again so Laravel rebuilds its configuration cache. A new assessment queues a confirmation to the customer and an alert to `BRON_NOTIFICATION_EMAIL`. Each admin document page can queue its quotation, customer or supplier PO, invoice, or delivery order to an editable recipient.
 
 Use the host-confirmed database hostname if it is not `localhost`. Preserve valid dotenv quoting, especially if a password includes quotes or backslashes. Set `.env` permissions to `600` (PHP must run as the cPanel user). Leave `APP_KEY` blank only for a brand-new installation; the deployment generates it automatically. Never reset an existing application key on updates. Never commit this server `.env` to GitHub.
 
@@ -154,7 +154,7 @@ In **Cron Jobs**, choose **Once Per Five Minutes**. Spaceship allows up to five 
 
 If cPanel has separate time fields, enter `*/5` for **Minute**, `*` for the other four time fields, and paste only `/usr/local/bin/php /home/aneowclfol/bron/artisan schedule:run >> /dev/null 2>&1` into **Command**.
 
-If the **Cron Jobs** menu is absent, send the exact completed line to Spaceship support and ask them to add it to the `aneowclfol` account crontab. Uploading or saving a shell file by itself will not schedule it. The entry is future-ready; no business schedules are configured yet. Resend sends synchronously over outbound HTTPS with the current `QUEUE_CONNECTION=sync` setting.
+If the **Cron Jobs** menu is absent, send the exact completed line to Spaceship support and ask them to add it to the `aneowclfol` account crontab. Uploading or saving a shell file by itself will not schedule it. Each scheduler run starts Laravel's database queue worker, delivers pending email through Resend, and exits when the queue is empty. With Spaceship's five-minute interval, queued email normally waits up to five minutes before delivery. Failed jobs retry up to three times and are recorded in `failed_jobs` after the final attempt.
 
 ## 7. Future updates and recovery
 

@@ -32,8 +32,8 @@ class EmailNotificationTest extends TestCase
             'consent' => '1',
         ])->assertRedirect(route('assessment.create'));
 
-        Mail::assertSent(AssessmentConfirmationMail::class, fn (AssessmentConfirmationMail $mail): bool => $mail->hasTo('customer@example.test'));
-        Mail::assertSent(NewAssessmentNotificationMail::class, fn (NewAssessmentNotificationMail $mail): bool => $mail->hasTo('operations@bronhighworks.com'));
+        Mail::assertQueued(AssessmentConfirmationMail::class, fn (AssessmentConfirmationMail $mail): bool => $mail->hasTo('customer@example.test'));
+        Mail::assertQueued(NewAssessmentNotificationMail::class, fn (NewAssessmentNotificationMail $mail): bool => $mail->hasTo('operations@bronhighworks.com'));
 
         $visit = SiteVisit::firstOrFail();
         $this->assertStringContainsString($visit->reference, (new AssessmentConfirmationMail($visit))->render());
@@ -58,7 +58,7 @@ class EmailNotificationTest extends TestCase
             $this->assertStringContainsString($document->number, (new BusinessDocumentMail($document->load('payments')))->render());
         }
 
-        Mail::assertSent(BusinessDocumentMail::class, 5);
+        Mail::assertQueued(BusinessDocumentMail::class, 5);
     }
 
     public function test_document_email_requires_an_admin_and_valid_recipient(): void
@@ -72,6 +72,6 @@ class EmailNotificationTest extends TestCase
             ->post($route, ['recipient' => 'invalid'])
             ->assertSessionHasErrors('recipient');
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 }

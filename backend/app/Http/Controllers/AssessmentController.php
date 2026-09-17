@@ -24,11 +24,11 @@ class AssessmentController extends Controller
         $visit = SiteVisit::create($request->safe()->except(['consent', 'website']) + ['reference' => (string) Str::uuid(), 'status' => 'new']);
 
         $this->sendNotification(function () use ($visit): void {
-            Mail::to($visit->email)->send(new AssessmentConfirmationMail($visit));
+            Mail::to($visit->email)->queue(new AssessmentConfirmationMail($visit));
         });
 
         $this->sendNotification(function () use ($visit): void {
-            Mail::to(config('mail.notifications.to'))->send(new NewAssessmentNotificationMail($visit));
+            Mail::to(config('mail.notifications.to'))->queue(new NewAssessmentNotificationMail($visit));
         });
 
         return redirect()->route('assessment.create')->with('reference', $visit->reference);

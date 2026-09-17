@@ -65,7 +65,7 @@ DB_PASSWORD="YOUR_DATABASE_PASSWORD"
 SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
 CACHE_STORE=database
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 MAIL_MAILER=resend
 MAIL_FROM_ADDRESS=hello@bronhighworks.com
 MAIL_FROM_NAME="BRON Highworks"
@@ -105,7 +105,7 @@ In **Cron Jobs**, choose once per minute (`* * * * *`). Replace placeholders wit
 * * * * * /CONFIRMED/PATH/TO/PHP83 /home/ACCOUNT/bron/artisan schedule:run >> /home/ACCOUNT/bron/storage/logs/scheduler.log 2>&1
 ```
 
-If cPanel shows separate time fields, enter only the command after the five stars in its **Command** box. This is future-ready; the current app has no scheduled business tasks. Rotate or periodically inspect the scheduler log. A scheduler is not a queue worker. The template uses `QUEUE_CONNECTION=sync`; revisit worker setup when background integrations are added.
+If cPanel shows separate time fields, enter only the command after the five stars in its **Command** box. The Laravel scheduler starts a database queue worker, processes pending email jobs, and exits when the queue is empty. It limits each run to four minutes and prevents overlapping runs. Rotate or periodically inspect the scheduler log.
 
 ## 7. Verify before launch
 
@@ -116,7 +116,7 @@ If cPanel shows separate time fields, enter only the command after the five star
 - Check that `.env` is inaccessible from the web and HTTP redirects to HTTPS.
 - Back up the database, `.env` including `APP_KEY`, and any files under `storage/app` privately.
 
-Email is delivered through Resend. Verify `bronhighworks.com` in Resend using the DKIM and SPF records it supplies, create a sending-only API key, and store it only in the private server `.env`. New site assessments notify both the customer and `BRON_NOTIFICATION_EMAIL`; admins can email every business document from its detail page. After any mail setting changes, run `artisan config:cache` or deploy again before testing.
+Email is queued in the database and delivered through Resend when the scheduler runs. Verify `bronhighworks.com` in Resend using the DKIM and SPF records it supplies, create a sending-only API key, and store it only in the private server `.env`. New site assessments queue notifications for both the customer and `BRON_NOTIFICATION_EMAIL`; admins can queue every business document from its detail page. After any mail or queue setting changes, run `artisan config:cache` or deploy again before testing.
 
 ## 8. Updating with File Manager (no SSH)
 

@@ -33,7 +33,7 @@ No Node build is required: the Blade views use the supplied CSS and JavaScript i
 4. Copy `.env.example` to `.env` and set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://YOUR-DOMAIN`, `DB_CONNECTION=mysql`, `DB_HOST=localhost`, `DB_PORT=3306`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, and `SESSION_SECURE_COOKIE=true`. Do not copy a local database or application key into production.
 5. If installing the source archive, run `composer install --no-dev --optimize-autoloader`. The cPanel bundle already includes production dependencies. Run `composer check-platform-reqs --no-dev` if Composer is available.
 6. Run `php artisan key:generate`, `php artisan migrate --force`, and `php artisan bron:admin YOUR-STAFF-EMAIL` using the correct cPanel PHP binary. Make `storage/` and `bootstrap/cache/` writable by the hosting PHP process; do not use world-writable permissions.
-7. Run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache`. Verify public submission, staff login, visit updates, and a document printout over HTTPS. Back up the database and application key securely.
+7. Set `QUEUE_CONNECTION=database`. Configure cron to run `php artisan schedule:run` at the shortest interval supported by the host; the scheduler drains queued email and exits. Run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache`. Verify public submission, staff login, visit updates, and a document printout over HTTPS. Back up the database and application key securely.
 
 If cPanel cannot point the document root at `public/`, obtain the host's recommended Laravel setup before launch. Exact hosting PHP version, document root, database, and deployment access remain unverified.
 

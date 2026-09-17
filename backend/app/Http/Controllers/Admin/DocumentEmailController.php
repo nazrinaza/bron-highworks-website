@@ -22,15 +22,15 @@ class DocumentEmailController extends Controller
         $document->load(['visit', 'parent', 'payments.recorder']);
 
         try {
-            Mail::to($data['recipient'])->send(new BusinessDocumentMail($document));
+            Mail::to($data['recipient'])->queue(new BusinessDocumentMail($document));
         } catch (Throwable $exception) {
             report($exception);
 
             throw ValidationException::withMessages([
-                'recipient' => 'The document could not be emailed. Check the Resend configuration and try again.',
+                'recipient' => 'The document could not be queued. Check the queue configuration and try again.',
             ]);
         }
 
-        return back()->with('success', "{$document->number} emailed to {$data['recipient']}.");
+        return back()->with('success', "{$document->number} queued for delivery to {$data['recipient']}.");
     }
 }
