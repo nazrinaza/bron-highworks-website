@@ -66,7 +66,11 @@ SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
 CACHE_STORE=database
 QUEUE_CONNECTION=sync
-MAIL_MAILER=log
+MAIL_MAILER=resend
+MAIL_FROM_ADDRESS=hello@bronhighworks.com
+MAIL_FROM_NAME="BRON Highworks"
+RESEND_API_KEY="YOUR_RESEND_API_KEY"
+BRON_NOTIFICATION_EMAIL=hello@bronhighworks.com
 ```
 
 Keep the other template settings. Use the password's exact value with valid dotenv quoting; ask for help if it contains quotes or backslashes. Never commit `.env` to GitHub. Keep `APP_KEY` blank until the next step.
@@ -112,7 +116,7 @@ If cPanel shows separate time fields, enter only the command after the five star
 - Check that `.env` is inaccessible from the web and HTTP redirects to HTTPS.
 - Back up the database, `.env` including `APP_KEY`, and any files under `storage/app` privately.
 
-`MAIL_MAILER=log` does not deliver mail. Resend and payment processing are not integrated yet. Do not add payment keys or promise email notifications until those integrations are implemented.
+Email is delivered through Resend. Verify `bronhighworks.com` in Resend using the DKIM and SPF records it supplies, create a sending-only API key, and store it only in the private server `.env`. New site assessments notify both the customer and `BRON_NOTIFICATION_EMAIL`; admins can email every business document from its detail page. After any mail setting changes, run `artisan config:cache` or deploy again before testing.
 
 ## 8. Updating with File Manager (no SSH)
 

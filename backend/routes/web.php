@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\DocumentEmailController;
+use App\Http\Controllers\Admin\InvoicePaymentController;
 use App\Http\Controllers\Admin\VisitController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AuthController;
@@ -15,7 +17,8 @@ Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'can:admin'])->group(function (): void {
     Route::redirect('/', '/admin/visits');
     Route::resource('visits', VisitController::class)->only(['index', 'show', 'update']);
-    Route::post('/documents/{document}/payments', [\App\Http\Controllers\Admin\InvoicePaymentController::class, 'store'])->name('documents.payments.store');
+    Route::post('/documents/{document}/payments', [InvoicePaymentController::class, 'store'])->name('documents.payments.store');
+    Route::post('/documents/{document}/email', DocumentEmailController::class)->name('documents.email');
     Route::resource('documents', DocumentController::class)->except(['destroy']);
     Route::patch('/documents/{document}/status', [DocumentController::class, 'status'])->name('documents.status');
 });

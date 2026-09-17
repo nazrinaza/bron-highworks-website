@@ -9,7 +9,7 @@ BRON Highworks website and Laravel operations application for drone-powered buil
 
 See [backend/README.md](backend/README.md) for installation, admin account creation, cPanel deployment, and workflow details. Requires PHP 8.3+. Point the hosting domain document root to `backend/public` when deploying this repository layout. Use a dedicated MySQL/MariaDB database and HTTPS in production.
 
-Dependencies are pinned in `backend/composer.lock`; vendor files, local databases, credentials, and runtime files are excluded. The current app uses ready-to-serve CSS and JavaScript and does not require a frontend build. GitHub Actions tests and builds a cPanel installation package on every push to `main`. The tested package is published to the `cpanel` branch for cPanel Git pull deployment. Resend email and payment integrations are not configured yet.
+Dependencies are pinned in `backend/composer.lock`; vendor files, local databases, credentials, and runtime files are excluded. The current app uses ready-to-serve CSS and JavaScript and does not require a frontend build. GitHub Actions tests and builds a cPanel installation package on every push to `main`. The tested package is published to the `cpanel` branch for cPanel Git pull deployment. Resend delivers assessment notifications and admin-sent business documents when its production environment settings are configured.
 
 ## Verification
 

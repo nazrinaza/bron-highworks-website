@@ -115,4 +115,8 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    'notifications' => [
+        'to' => env('BRON_NOTIFICATION_EMAIL', 'hello@bronhighworks.com'),
+    ],
+
 ];
